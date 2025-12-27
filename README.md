@@ -77,6 +77,3 @@ TapeVibe is a retro‑styled web app that lets you create and share digital mixt
 
 Built with love by **Mohit Chamoli** as a blend of nostalgic design and modern web tech.[code_file:14]
 
-
-## 📦 Project Structure
-
