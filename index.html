@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TapeVibe - Create Your Musical Gift</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Create Page -->
+    <div id="createPage" class="page active">
+        <div class="container">
+            <h1 class="title">Make a TapeVibe</h1>
+
+            <div class="cassette-display">
+                <div class="cassette">
+                    <div class="cassette-top">
+                        <div class="screw"></div>
+                        <div class="label">
+                            <div class="label-text" id="previewName">FOR YOU</div>
+                            <div class="label-line"></div>
+                        </div>
+                        <div class="screw"></div>
+                    </div>
+                    <div class="cassette-body">
+                        <div class="cassette-window">
+                            <div class="reel left">
+                                <div class="reel-center"></div>
+                                <div class="reel-teeth"></div>
+                            </div>
+                            <div class="tape-visible"></div>
+                            <div class="reel right">
+                                <div class="reel-center"></div>
+                                <div class="reel-teeth"></div>
+                            </div>
+                        </div>
+                        <div class="cassette-holes">
+                            <div class="hole"></div>
+                            <div class="side-label">A</div>
+                            <div class="hole"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="credit">clutch</div>
+            </div>
+
+            <div class="form-container">
+                <div class="platform-info">
+                    <p class="info-text">🎵 Supports: <strong>Spotify</strong>, YouTube, SoundCloud</p>
+                    <p class="tip-text">💡 TIP: Spotify links work best for music!</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipientName">RECIPIENT NAME (OPTIONAL):</label>
+                    <input 
+                        type="text" 
+                        id="recipientName" 
+                        placeholder="Who is this tape for?"
+                        maxlength="30"
+                    >
+                    <p class="hint">Leave blank for "For You"</p>
+                </div>
+
+                <div class="form-group">
+                    <label>ADD MUSIC LINKS (MAX 5):</label>
+                    <div id="trackInputs">
+                        <div class="track-input">
+                            <span class="track-number">1:</span>
+                            <input 
+                                type="url" 
+                                class="music-input" 
+                                placeholder="Paste Spotify, YouTube, or SoundCloud URL"
+                                data-track="1"
+                            >
+                        </div>
+                    </div>
+                    <button id="addTrackBtn" class="add-track-btn">ADD ANOTHER TRACK (1/5)</button>
+                </div>
+
+                <div class="example-links">
+                    <p class="example-title">📌 Example Links:</p>
+                    <p class="example-item">• Spotify: open.spotify.com/track/...</p>
+                    <p class="example-item">• YouTube: youtube.com/watch?v=...</p>
+                    <p class="example-item">• SoundCloud: soundcloud.com/...</p>
+                </div>
+
+                <button id="createBtn" class="create-btn">
+                    CREATE TAPEVIBE 
+                    <span class="arrow">→</span>
+                </button>
+            </div>
+
+            <footer class="footer">
+                © 2025 MohitChamoli - ALL RIGHTS RESERVED
+            </footer>
+        </div>
+    </div>
+
+    <!-- Player Page -->
+    <div id="playerPage" class="page">
+        <div class="player-container">
+            <div class="radio-player">
+                <div class="radio-handle"></div>
+                <div class="radio-clips">
+                    <div class="clip"></div>
+                    <div class="clip"></div>
+                </div>
+
+                <div class="radio-dial">
+                    <div class="dial-markers">
+                        <span>88</span>
+                        <span>92</span>
+                        <span>96</span>
+                        <span>100</span>
+                        <span>104</span>
+                        <span>108</span>
+                        <span>MHz</span>
+                    </div>
+                    <div class="dial-line"></div>
+                    <div class="dial-indicator"></div>
+                </div>
+
+                <div class="screen-area">
+                    <div class="cassette-slot" id="cassetteSlot">
+                        <div class="empty-slot">
+                            <div class="slot-opening"></div>
+                            <button id="insertBtn" class="insert-btn" style="display: none;">INSERT</button>
+                        </div>
+                    </div>
+
+                    <div class="speaker-grill">
+                        <div class="grill-line"></div>
+                        <div class="grill-line"></div>
+                        <div class="grill-line"></div>
+                        <div class="grill-line"></div>
+                        <div class="grill-line"></div>
+                        <div class="brand">TapeVibe</div>
+                    </div>
+
+                    <div class="track-display">
+                        <span id="trackInfo">NO TAPE</span>
+                        <div class="status-light" id="statusLight"></div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn" id="prevBtn">
+                        <span>⏮</span>
+                    </button>
+                    <button class="control-btn play-btn" id="playBtn">
+                        <span>▶</span>
+                    </button>
+                    <button class="control-btn" id="nextBtn">
+                        <span>⏭</span>
+                    </button>
+                </div>
+            </div>
+
+            <p class="mobile-note">Now playing on <span id="platformName">TapeVibe</span></p>
+            <a href="#" id="createNewLink" class="create-new-link">Create a new TapeVibe</a>
+        </div>
+    </div>
+
+    <!-- Player Frame Container -->
+    <div id="playerFrame"></div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://w.soundcloud.com/player/api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
