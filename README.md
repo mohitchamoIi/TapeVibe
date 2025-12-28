@@ -61,8 +61,9 @@ TapeVibe is a retro‑styled web app that lets you create and share digital mixt
 
 ### 2. Share With a Friend
 
+- Use the **Share** button on the player page to open sharing options (native device share, copy link, WhatsApp, Telegram, Twitter, Email).  
 - Copy the URL from the address bar (it contains `?playback&tracks=...&to=...`).  
-- Send it over WhatsApp, Instagram, SMS, etc.[code_file:15]
+- Send it over WhatsApp, Instagram (paste in DM or bio), SMS, etc.[code_file:15]
 
 ### 3. Friend’s Experience
 

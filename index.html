@@ -142,6 +142,8 @@
                         <span id="trackInfo">NO TAPE</span>
                         <div class="status-light" id="statusLight"></div>
                     </div>
+
+                    <button id="shareBtn" class="share-btn" aria-label="Share TapeVibe" title="Share your TapeVibe">Share</button>
                 </div>
 
                 <div class="controls">
@@ -164,6 +166,27 @@
 
     <!-- Player Frame Container -->
     <div id="playerFrame"></div>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="share-modal" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="share-modal-content">
+            <button id="shareCloseBtn" class="share-close" aria-label="Close share dialog">✕</button>
+            <h3>Share your TapeVibe</h3>
+            <p class="share-note">Share the link via apps or copy it. (Instagram does not accept link-only posts — use it in DM or bio.)</p>
+            <div class="share-options">
+                <button id="shareNativeBtn" class="share-option">🔗 More (device share)</button>
+                <button id="shareCopyBtn" class="share-option">📋 Copy link</button>
+                <button id="shareWhatsAppBtn" class="share-option">🟢 WhatsApp</button>
+                <button id="shareTelegramBtn" class="share-option">✈️ Telegram</button>
+                <button id="shareTwitterBtn" class="share-option">🐦 Twitter</button>
+                <button id="shareEmailBtn" class="share-option">✉️ Email</button>
+                <button id="shareInstagramBtn" class="share-option">📷 Instagram (copy)</button>
+            </div>
+            <input id="shareCopyInput" class="share-copy-input" readonly>
+            <div id="shareStatus" class="share-status" aria-live="polite"></div>
+        </div>
+        <div id="shareOverlay" class="share-overlay"></div>
+    </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="https://w.soundcloud.com/player/api.js"></script>

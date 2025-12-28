@@ -64,6 +64,7 @@ class SpotifyController {
 }
 
 let spotifyController = null;
+let shareableUrl = window.location.origin + window.location.pathname;
 
 // Platform detection and ID extraction
 function detectPlatform(url) {
@@ -219,7 +220,7 @@ document.getElementById('createBtn').addEventListener('click', function() {
     params.set('tracks', JSON.stringify(tracks));
     params.set('to', recipientName);
 
-    const shareableUrl = window.location.origin + window.location.pathname + '?playback&' + params.toString();
+    shareableUrl = window.location.origin + window.location.pathname + '?playback&' + params.toString();
 
     // Update URL
     window.history.pushState({}, '', '?playback&' + params.toString());
@@ -595,3 +596,163 @@ window.addEventListener('load', function() {
         }
     }
 });
+
+// --- Share functionality ---
+function updateShareableUrlToCurrent() {
+    shareableUrl = window.location.href;
+}
+
+
+document.getElementById('shareBtn')?.addEventListener('click', openShareModal);
+
+document.getElementById('shareNativeBtn')?.addEventListener('click', async function() {
+    const url = shareableUrl || window.location.href;
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: 'TapeVibe', text: 'Check out this TapeVibe!', url });
+            closeShareModal();
+        } catch (err) {
+            console.log('Share canceled or failed', err);
+        }
+    } else {
+        // Fallback: copy link
+        copyLink();
+    }
+});
+
+
+document.getElementById('shareCopyBtn')?.addEventListener('click', copyLink);
+document.getElementById('shareWhatsAppBtn')?.addEventListener('click', () => openExternalShare('https://wa.me/?text='));
+document.getElementById('shareTelegramBtn')?.addEventListener('click', () => openExternalShare('https://t.me/share/url?url='));
+document.getElementById('shareTwitterBtn')?.addEventListener('click', () => openExternalShare('https://twitter.com/intent/tweet?text='));
+document.getElementById('shareEmailBtn')?.addEventListener('click', () => {
+    const url = encodeURIComponent(shareableUrl || window.location.href);
+    window.open(`mailto:?subject=${encodeURIComponent('TapeVibe')}&body=${encodeURIComponent('Check this TapeVibe: ')}%20${url}`, '_self');
+    closeShareModal();
+});
+document.getElementById('shareInstagramBtn')?.addEventListener('click', () => {
+    copyLink().then(() => {
+        alert('Link copied — Instagram posts do not accept link-only posts. Paste link in DM or your bio.');
+    });
+});
+
+document.getElementById('shareCloseBtn')?.addEventListener('click', closeShareModal);
+document.getElementById('shareOverlay')?.addEventListener('click', closeShareModal);
+
+function openShareModal() {
+    updateShareableUrlToCurrent();
+    const modal = document.getElementById('shareModal');
+    const input = document.getElementById('shareCopyInput');
+    const status = document.getElementById('shareStatus');
+    if (!modal) return;
+    input.value = shareableUrl || window.location.href;
+    status.textContent = '';
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+
+    // Make it easy to copy: focus and select the URL
+    try {
+        input.focus();
+        input.select();
+    } catch (e) {}
+}
+
+function closeShareModal() {
+    const modal = document.getElementById('shareModal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+async function copyLink() {
+    const url = shareableUrl || window.location.href;
+    const status = document.getElementById('shareStatus');
+    const input = document.getElementById('shareCopyInput');
+
+    // Keep the input value updated so the user can see/copy it manually if needed
+    if (input) input.value = url;
+
+    try {
+        // Preferred modern API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(url);
+            if (status) status.textContent = 'Copied to clipboard ✅';
+            return Promise.resolve();
+        }
+
+        // Fallback: use the visible input inside the modal if present
+        if (input) {
+            input.removeAttribute('readonly');
+            input.focus();
+            input.select();
+            try {
+                // For mobile browsers, ensure selection range
+                input.setSelectionRange(0, 99999);
+            } catch (e) {}
+
+            const ok = document.execCommand && document.execCommand('copy');
+            input.setAttribute('readonly', 'true');
+
+            if (ok) {
+                if (status) status.textContent = 'Copied to clipboard ✅';
+                return Promise.resolve();
+            } else {
+                if (status) status.textContent = 'Automatic copy failed — link selected. Press Ctrl+C (or long-press) to copy.';
+                return Promise.reject(new Error('execCommand failed'));
+            }
+        }
+
+        // Final fallback: off-screen temporary input
+        const temp = document.createElement('input');
+        temp.style.position = 'absolute';
+        temp.style.left = '-9999px';
+        temp.value = url;
+        document.body.appendChild(temp);
+        temp.select();
+        try {
+            temp.setSelectionRange(0, 99999);
+        } catch (e) {}
+        const ok = document.execCommand && document.execCommand('copy');
+        document.body.removeChild(temp);
+        if (ok) {
+            if (status) status.textContent = 'Copied to clipboard ✅';
+            return Promise.resolve();
+        }
+
+        if (status) status.textContent = 'Automatic copy failed — link selected. Press Ctrl+C (or long-press) to copy.';
+        return Promise.reject(new Error('execCommand failed'));
+    } catch (err) {
+        // Helpful feedback for insecure contexts
+        if (!window.isSecureContext && status) {
+            status.textContent = 'Automatic copy is blocked on file:// or non-secure pages — please copy the link manually.';
+        } else if (status) {
+            status.textContent = 'Copy failed — please copy manually (link selected).';
+        }
+
+        // Focus and select the input so user can copy manually
+        if (input) {
+            input.removeAttribute('readonly');
+            input.focus();
+            try { input.select(); } catch (e) {}
+        }
+
+        return Promise.reject(err);
+    }
+}
+
+function openExternalShare(base) {
+    const url = shareableUrl || window.location.href;
+    const text = encodeURIComponent('Check out my TapeVibe: ' + url);
+    const shareUrl = base + encodeURIComponent(url) + (base.includes('intent') ? '&via=TapVibe' : (base.includes('wa.me') ? encodeURIComponent('Check out my TapeVibe: ' + url) : ''));
+    // For WhatsApp we want wa.me/?text=encodedMessage
+    if (base.includes('wa.me')) {
+        window.open(`https://wa.me/?text=${encodeURIComponent('Check out my TapeVibe: ' + url)}`, '_blank');
+    } else if (base.includes('t.me')) {
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent('Check out my TapeVibe!')}`, '_blank');
+    } else if (base.includes('twitter.com')) {
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out my TapeVibe: ' + url)}`, '_blank');
+    } else {
+        window.open(shareUrl, '_blank');
+    }
+    closeShareModal();
+}
