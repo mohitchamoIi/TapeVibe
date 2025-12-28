@@ -22,16 +22,22 @@ class SpotifyController {
 
         // Listen for messages from Spotify iframe
         window.addEventListener('message', (event) => {
-            if (event.source !== this.iframe.contentWindow) return;
+            // Only accept messages from the known iframe content window
+            try {
+                if (!this.iframe || event.source !== this.iframe.contentWindow) return;
+            } catch (err) {
+                return;
+            }
 
             const data = event.data;
+            console.debug('[SpotifyController] message received:', data);
 
-            if (data.type === 'ready') {
+            if (data && data.type === 'ready') {
                 this.isReady = true;
                 console.log('✓ Spotify player ready');
             }
 
-            if (data.type === 'playback_update') {
+            if (data && data.type === 'playback_update') {
                 // Sync our UI with Spotify player state
                 if (data.isPaused) {
                     stopReels();
@@ -44,21 +50,39 @@ class SpotifyController {
 
     play() {
         if (this.isReady && this.iframe) {
-            this.iframe.contentWindow.postMessage({ command: 'toggle' }, '*');
-            console.log('▶ Playing Spotify');
+            try {
+                // Try several message shapes used by different embed types
+                this.iframe.contentWindow.postMessage({ command: 'play' }, '*');
+                this.iframe.contentWindow.postMessage({ command: 'toggle' }, '*');
+                this.iframe.contentWindow.postMessage({ func: 'play' }, '*');
+                console.log('▶ Sent play message to Spotify iframe');
+            } catch (e) {
+                console.warn('Failed to send play message to Spotify iframe:', e);
+            }
         }
     }
 
     pause() {
         if (this.isReady && this.iframe) {
-            this.iframe.contentWindow.postMessage({ command: 'toggle' }, '*');
-            console.log('⏸ Pausing Spotify');
+            try {
+                this.iframe.contentWindow.postMessage({ command: 'pause' }, '*');
+                this.iframe.contentWindow.postMessage({ command: 'toggle' }, '*');
+                this.iframe.contentWindow.postMessage({ func: 'pause' }, '*');
+                console.log('⏸ Sent pause message to Spotify iframe');
+            } catch (e) {
+                console.warn('Failed to send pause message to Spotify iframe:', e);
+            }
         }
     }
 
     toggle() {
         if (this.isReady && this.iframe) {
-            this.iframe.contentWindow.postMessage({ command: 'toggle' }, '*');
+            try {
+                this.iframe.contentWindow.postMessage({ command: 'toggle' }, '*');
+                console.log('↔ Sent toggle message to Spotify iframe');
+            } catch (e) {
+                console.warn('Failed to send toggle message to Spotify iframe:', e);
+            }
         }
     }
 }
@@ -468,19 +492,28 @@ document.getElementById('nextBtn').addEventListener('click', () => { if(isTapeIn
 function togglePlay() {
     if (!isTapeInserted) return;
 
+    console.debug('[TapeVibe] togglePlay called', { currentPlatform, isPlaying, spotifyControllerReady: spotifyController ? spotifyController.isReady : false });
+
     // Spotify: we try to control via controller, but also update UI optimistically
     if (currentPlatform === 'spotify') {
+        // Optimistic UI
         if (isPlaying) {
             stopReels();
         } else {
             startReels();
         }
 
+        // If we can control Spotify via controller, prefer explicit play/pause
         if (spotifyController && spotifyController.isReady) {
             try {
-                spotifyController.toggle();
+                // Try explicit commands if available
+                if (isPlaying) {
+                    spotifyController.pause();
+                } else {
+                    spotifyController.play();
+                }
             } catch (e) {
-                console.warn('Spotify toggle failed:', e);
+                console.warn('Spotify control failed:', e);
                 showTempTrackStatus('Could not control Spotify automatically. Try inside the widget.');
             }
         } else {
@@ -488,11 +521,11 @@ function togglePlay() {
             spotifyIframe = document.getElementById('spotifyFrame');
             if (spotifyIframe && !spotifyController) {
                 spotifyController = new SpotifyController(spotifyIframe);
-                console.log('Attempting Spotify controller init (fallback)');
+                console.log('[TapeVibe] Attempting Spotify controller init (fallback)');
             }
 
             // Give the user a hint if automatic control isn't available
-            showTempTrackStatus('If playback didn\'t start, try playing inside the Spotify widget.');
+            showTempTrackStatus('If playback didn\'t start, tap play inside the Spotify widget.');
         }
 
         return;
@@ -500,6 +533,7 @@ function togglePlay() {
 
     // YouTube: defer to player API
     if (currentPlatform === 'youtube' && youtubePlayer) {
+        console.debug('[TapeVibe] YouTube toggle, isPlaying:', isPlaying);
         if (isPlaying) {
             youtubePlayer.pauseVideo();
         } else {
@@ -509,6 +543,7 @@ function togglePlay() {
     }
 
     // SoundCloud or other: fallback to local UI toggle
+    console.debug('[TapeVibe] Fallback toggle for platform:', currentPlatform);
     if (isPlaying) {
         stopReels();
     } else {
@@ -531,7 +566,18 @@ function startReels() {
     const reels = document.querySelectorAll('.reel');
     reels.forEach(r => r.classList.add('spinning'));
     isPlaying = true;
-    document.querySelector('#playBtn span').textContent = '⏸';
+    const playSpan = document.querySelector('#playBtn span');
+    if (playSpan) playSpan.textContent = '⏸';
+    console.debug('[TapeVibe] startReels -> isPlaying = true');
+}
+
+function stopReels() {
+    const reels = document.querySelectorAll('.reel');
+    reels.forEach(r => r.classList.remove('spinning'));
+    isPlaying = false;
+    const playSpan = document.querySelector('#playBtn span');
+    if (playSpan) playSpan.textContent = '▶';
+    console.debug('[TapeVibe] stopReels -> isPlaying = false');
 }
 
 function stopReels() {
