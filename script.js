@@ -525,7 +525,7 @@ function togglePlay() {
             }
 
             // Give the user a hint if automatic control isn't available
-            showTempTrackStatus('If playback didn\'t start, tap play inside the Spotify widget.');
+            showTempTrackStatus();
         }
 
         return;
