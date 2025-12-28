@@ -468,24 +468,63 @@ document.getElementById('nextBtn').addEventListener('click', () => { if(isTapeIn
 function togglePlay() {
     if (!isTapeInserted) return;
 
-    if (currentPlatform === 'spotify' && spotifyController) {
-        // Toggle Spotify player via API
-        spotifyController.toggle();
-        // UI will sync via playback_update event
-    } else if (currentPlatform === 'youtube' && youtubePlayer) {
-        if (isPlaying) {
-            youtubePlayer.pauseVideo();
-        } else {
-            youtubePlayer.playVideo();
-        }
-    } else {
-        // Fallback for SoundCloud - just toggle UI
+    // Spotify: we try to control via controller, but also update UI optimistically
+    if (currentPlatform === 'spotify') {
         if (isPlaying) {
             stopReels();
         } else {
             startReels();
         }
+
+        if (spotifyController && spotifyController.isReady) {
+            try {
+                spotifyController.toggle();
+            } catch (e) {
+                console.warn('Spotify toggle failed:', e);
+                showTempTrackStatus('Could not control Spotify automatically. Try inside the widget.');
+            }
+        } else {
+            // Attempt to initialize the controller if iframe exists (race condition fix)
+            spotifyIframe = document.getElementById('spotifyFrame');
+            if (spotifyIframe && !spotifyController) {
+                spotifyController = new SpotifyController(spotifyIframe);
+                console.log('Attempting Spotify controller init (fallback)');
+            }
+
+            // Give the user a hint if automatic control isn't available
+            showTempTrackStatus('If playback didn\'t start, try playing inside the Spotify widget.');
+        }
+
+        return;
     }
+
+    // YouTube: defer to player API
+    if (currentPlatform === 'youtube' && youtubePlayer) {
+        if (isPlaying) {
+            youtubePlayer.pauseVideo();
+        } else {
+            youtubePlayer.playVideo();
+        }
+        return;
+    }
+
+    // SoundCloud or other: fallback to local UI toggle
+    if (isPlaying) {
+        stopReels();
+    } else {
+        startReels();
+    }
+}
+
+// small helper to show a short message in the track display area
+function showTempTrackStatus(message, ms = 2500) {
+    const trackInfo = document.getElementById('trackInfo');
+    if (!trackInfo) return;
+    const prev = trackInfo.textContent;
+    trackInfo.textContent = message;
+    setTimeout(() => {
+        trackInfo.textContent = prev;
+    }, ms);
 }
 
 function startReels() {
