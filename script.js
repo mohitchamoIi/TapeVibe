@@ -9,6 +9,45 @@ let spotifyIframe = null;
 let youtubePlayer = null;
 let playerReady = false;
 
+// Photo (local only, not serialized in share URL)
+let photoDataUrl = null;
+
+// Photo upload handlers
+function handlePhotoUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type || !file.type.startsWith('image/')) {
+        alert('Please select an image file.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        photoDataUrl = ev.target.result;
+        const preview = document.getElementById('photoPreview');
+        const img = document.getElementById('photoPreviewImg');
+        if (img) img.src = photoDataUrl;
+        if (preview) {
+            preview.style.display = 'flex';
+            preview.setAttribute('aria-hidden', 'false');
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function removePhoto() {
+    photoDataUrl = null;
+    const photoInput = document.getElementById('photoInput');
+    if (photoInput) photoInput.value = '';
+    const preview = document.getElementById('photoPreview');
+    const img = document.getElementById('photoPreviewImg');
+    if (img) img.src = '';
+    if (preview) {
+        preview.style.display = 'none';
+        preview.setAttribute('aria-hidden', 'true');
+    }
+}
+
 // YouTube API Ready
 window.onYouTubeIframeAPIReady = function() {
     console.log('YouTube API Ready');
@@ -176,6 +215,12 @@ document.getElementById('recipientName').addEventListener('input', function(e) {
     document.getElementById('previewName').textContent = name;
 });
 
+// Photo input listeners
+const photoInputEl = document.getElementById('photoInput');
+if (photoInputEl) photoInputEl.addEventListener('change', handlePhotoUpload);
+const removePhotoBtn = document.getElementById('removePhotoBtn');
+if (removePhotoBtn) removePhotoBtn.addEventListener('click', removePhoto);
+
 // Add track
 let trackCount = 1;
 document.getElementById('addTrackBtn').addEventListener('click', function() {
@@ -316,6 +361,27 @@ function insertTape() {
         </div>
         <button id="ejectBtn" class="eject-btn">EJECT</button>
     `;
+
+    // If a photo was added, insert a framed photo into the cassette window
+    if (photoDataUrl) {
+        const cassetteWindow = cassetteSlot.querySelector('.cassette-window');
+        if (cassetteWindow) {
+            const photoHtml = `
+                <div class="photo-frame" style="width:120px;height:120px;">
+                    <img src="${photoDataUrl}" alt="Inserted photo">
+                    <div class="heart-frame" aria-hidden="true">
+                        <div class="heart h1"></div>
+                        <div class="heart h2"></div>
+                        <div class="heart h3"></div>
+                        <div class="heart h4"></div>
+                        <div class="heart h5"></div>
+                        <div class="heart h6"></div>
+                    </div>
+                </div>
+            `;
+            cassetteWindow.insertAdjacentHTML('afterbegin', photoHtml);
+        }
+    }
 
     currentTrack = 0;
     document.getElementById('trackInfo').textContent = `TRACK 1/${tracks.length}`;
@@ -565,6 +631,8 @@ function showTempTrackStatus(message, ms = 2500) {
 function startReels() {
     const reels = document.querySelectorAll('.reel');
     reels.forEach(r => r.classList.add('spinning'));
+    // animate photo(s)
+    document.querySelectorAll('.photo-frame').forEach(p => p.classList.add('playing'));
     isPlaying = true;
     const playSpan = document.querySelector('#playBtn span');
     if (playSpan) playSpan.textContent = '⏸';
@@ -577,6 +645,8 @@ function stopReels() {
     isPlaying = false;
     const playSpan = document.querySelector('#playBtn span');
     if (playSpan) playSpan.textContent = '▶';
+    // stop photo animation
+    document.querySelectorAll('.photo-frame').forEach(p => p.classList.remove('playing'));
     console.debug('[TapeVibe] stopReels -> isPlaying = false');
 }
 
