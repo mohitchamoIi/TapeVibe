@@ -12,7 +12,7 @@ let playerReady = false;
 // Photo (local only, not serialized in share URL)
 let photoDataUrl = null;
 
-// Photo upload handlers
+// Photo upload handler
 function handlePhotoUpload(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -910,4 +910,5 @@ function openExternalShare(base) {
         window.open(shareUrl, '_blank');
     }
     closeShareModal();
+
 }
