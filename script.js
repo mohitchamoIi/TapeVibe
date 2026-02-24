@@ -9,9 +9,12 @@ let spotifyIframe = null;
 let youtubePlayer = null;
 let playerReady = false;
 
+
 // Photo (local only, not serialized in share URL) 
+
 let photoDataUrl = null;
 // Photo upload handler
+
 function handlePhotoUpload(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
